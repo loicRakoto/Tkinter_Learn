@@ -77,6 +77,19 @@ def update_user(user_id, email, name, firstname, password):
     conn.close()
 
 
+def search_users_filter(column, keyword):
+    conn = get_connection()
+    cur = conn.cursor()
+    query = f"""
+        SELECT id, name, firstname, email, password 
+        FROM users
+        WHERE {column} LIKE ? 
+        AND email != 'admin@gmail.com'
+    """
+    cur.execute(query, (f"%{keyword}%",))
+    results = cur.fetchall()
+    conn.close()
+    return results
 
 def add_book(title, author, publication, summary, link):
     conn = get_connection()

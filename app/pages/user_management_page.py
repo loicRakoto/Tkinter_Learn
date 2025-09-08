@@ -2,9 +2,18 @@ from customtkinter import *
 from tkinter import messagebox, ttk
 import tkinter as tk
 
-from app.db import add_user, delete_user, get_all_users, update_user
+from app.db import add_user, delete_user, get_all_users, search_users_filter, update_user
 
 class UserManagementPage(tk.Frame):
+
+    SEARCH_MAP = {
+    "Id": "id",
+    "Nom": "name",
+    "Prenom": "firstname",
+    "Email": "email",
+    "Mot de passe": "password"
+    }
+
     def __init__(self, parent, controller):
         super().__init__(parent, bg="white", width=1200, height=850)
         self.controller = controller
@@ -27,6 +36,10 @@ class UserManagementPage(tk.Frame):
             entry = CTkEntry(leftFrame, font=('Microsoft YaHei UI Light', 14), width=180)
             entry.grid(row=i, column=1, padx=10)
             self.entries[text] = entry
+
+            if text == "Id":
+                label.grid_remove()
+                entry.grid_remove()
         
         self.entries["Id"].configure(state="readonly")
 
@@ -35,21 +48,21 @@ class UserManagementPage(tk.Frame):
         rightFrame.grid(row=1, column=1, padx=20, pady=10)
 
         search_options = ('Id', 'Nom', 'Prenom', 'Email', 'Mot de passe')
-        searchBox = CTkComboBox(rightFrame, values=search_options, state='readonly', width=120,
+        self.searchBox = CTkComboBox(rightFrame, values=search_options, state='readonly', width=120,
                                 fg_color="black", text_color="white",
                                 button_color="#57a1f8", button_hover_color="#4682B4")
-        searchBox.grid(row=0, column=0, padx=5, pady=5)
-        searchBox.set('Recherche')
+        self.searchBox.grid(row=0, column=0, padx=5, pady=5)
+        self.searchBox.set('Recherche')
 
-        searchEntry = CTkEntry(rightFrame, width=150, fg_color="#f0f0f0",
+        self.searchEntry = CTkEntry(rightFrame, width=150, fg_color="#f0f0f0",
                                border_color="#57a1f8", text_color="black",
                                placeholder_text="Tapez ici..." )
-        searchEntry.grid(row=0, column=1, padx=5)
+        self.searchEntry.grid(row=0, column=1, padx=5)
 
-        searchButton = CTkButton(rightFrame, text='Rechercher', width=100, fg_color="#023F05")
+        searchButton = CTkButton(rightFrame, text='Rechercher', width=100, fg_color="#023F05", command=self.search_with_filter)
         searchButton.grid(row=0, column=2, padx=5)
 
-        showallButton = CTkButton(rightFrame, text='Afficher tout', width=100, fg_color="#4682B4")
+        showallButton = CTkButton(rightFrame, text='Afficher tout', width=100, fg_color="#4682B4", command=self.on_show_all)
         showallButton.grid(row=0, column=3, padx=5)
 
         # === Tableau utilisateurs ===
@@ -159,6 +172,22 @@ class UserManagementPage(tk.Frame):
         finally:
             self.load_users()
             self.clear_entries()
+
+    def search_with_filter(self):
+        category = self.searchBox.get()
+        keyword = self.searchEntry.get()
+        column = self.SEARCH_MAP.get(category)
+        if not column:
+            return []
+        results = search_users_filter(column, keyword)
+        self.tree.delete(*self.tree.get_children())
+        for res in results:
+            self.tree.insert('', 'end', values=res)
+
+    def on_show_all(self):
+        results = get_all_users()
+        for res in results:
+            self.tree.insert('', 'end', values=res)
 
     def clear_entries(self):
         for key in self.entries:

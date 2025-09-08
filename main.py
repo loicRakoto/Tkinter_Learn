@@ -18,7 +18,7 @@ class App(tk.Tk):
         add_user("admin@gmail.com", "Admin", "User", "1234")
 
         self.current_frame = None
-        self.show_frame(LoginPage)
+        self.show_frame(UserManagementPage)
 
     def show_frame(self, page_class):
         if self.current_frame is not None:
