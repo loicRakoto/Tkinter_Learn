@@ -22,8 +22,9 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT NOT NULL,
             author TEXT NOT NULL,
-            year INTEGER,
-            isbn TEXT UNIQUE
+            publication TEXT NOT NULL,
+            summary TEXT NOT NULL,
+            link TEXT NOT NULL
         )
     """)
     
@@ -72,5 +73,42 @@ def update_user(user_id, email, name, firstname, password):
     conn = get_connection()
     cur = conn.cursor()
     cur.execute("UPDATE users SET email=?, name=?, firstname=?, password=? WHERE id=?", (email, name, firstname, password, user_id))
+    conn.commit()
+    conn.close()
+
+
+
+def add_book(title, author, publication, summary, link):
+    conn = get_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("INSERT INTO books (title, author, publication, summary, link) VALUES (?, ?, ?, ?, ?)", (title, author, publication, summary, link))
+        conn.commit()
+    except sqlite3.IntegrityError:
+        pass 
+    conn.close()
+
+def get_all_books():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT id, title, author, publication, summary, link
+        FROM books
+    """)
+    books = cur.fetchall()
+    conn.close()
+    return books
+
+def delete_book(book_id):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM books WHERE id=?", (book_id,))
+    conn.commit()
+    conn.close()
+
+def update_book(book_id, title, author, publication, summary, link):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("UPDATE books SET title=?, author=?, publication=?, summary=?, link=? WHERE id=?", (title, author, publication, summary, link, book_id))
     conn.commit()
     conn.close()
